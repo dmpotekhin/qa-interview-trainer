@@ -1,0 +1,845 @@
+{
+  "meta": {
+    "title": "Java Core — устные вопросы для собеседования",
+    "total": 117,
+    "topics": [
+      "Generics",
+      "JVM",
+      "Java 8",
+      "String",
+      "equals/hashCode",
+      "Исключения",
+      "Коллекции",
+      "Многопоточность",
+      "ООП",
+      "Прочее"
+    ],
+    "levels": [
+      "Junior",
+      "Middle",
+      "Senior"
+    ],
+    "usage": "Карточки вопрос-ответ. Фильтры по topic/level, режим 'показать ответ', счётчик прогресса."
+  },
+  "questions": [
+    {
+      "id": "JC-001",
+      "topic": "ООП",
+      "level": "Junior",
+      "question": "Назови 4 принципа ООП.",
+      "answer": "Инкапсуляция (сокрытие данных), наследование (переиспользование кода через extends), полиморфизм (один интерфейс — разные реализации), абстракция (выделение существенного)."
+    },
+    {
+      "id": "JC-002",
+      "topic": "ООП",
+      "level": "Junior",
+      "question": "Разница между абстрактным классом и интерфейсом?",
+      "answer": "Абстрактный класс: имеет состояние, конструкторы, реализованные и абстрактные методы, наследуется один. Интерфейс: контракт, множественная реализация, поля public static final, с Java 8 default/static, с Java 9 private методы."
+    },
+    {
+      "id": "JC-003",
+      "topic": "ООП",
+      "level": "Middle",
+      "question": "Чем отличается перегрузка (overloading) от переопределения (overriding)?",
+      "answer": "Overloading — одно имя, разные параметры, разрешается на компиляции (статический полиморфизм). Overriding — подкласс заменяет реализацию родителя, разрешается в рантайме (динамический полиморфизм)."
+    },
+    {
+      "id": "JC-004",
+      "topic": "ООП",
+      "level": "Junior",
+      "question": "Что такое инкапсуляция?",
+      "answer": "Сокрытие внутреннего состояния: поля private, доступ через геттеры/сеттеры, позволяет контролировать валидацию и менять реализацию не ломая API."
+    },
+    {
+      "id": "JC-005",
+      "topic": "ООП",
+      "level": "Middle",
+      "question": "Возможно ли множественное наследование в Java?",
+      "answer": "Классов — нет (проблема ромба), интерфейсов — да. При конфликте default-методов нужно переопределить и вызвать Interface.super.method()."
+    },
+    {
+      "id": "JC-006",
+      "topic": "ООП",
+      "level": "Middle",
+      "question": "Что такое композиция и почему 'композиция важнее наследования'?",
+      "answer": "Композиция — объект содержит другие объекты как поля. Гибче наследования: меньше связанность, нет хрупкой иерархии, легче менять поведение в рантайме."
+    },
+    {
+      "id": "JC-007",
+      "topic": "ООП",
+      "level": "Middle",
+      "question": "Что такое ассоциация, агрегация и композиция?",
+      "answer": "Ассоциация — связь объектов. Агрегация — 'has-a' со слабой связью (часть живёт без целого). Композиция — сильная связь (часть не существует без целого)."
+    },
+    {
+      "id": "JC-008",
+      "topic": "ООП",
+      "level": "Middle",
+      "question": "Что такое 'is-a' и 'has-a' отношения?",
+      "answer": "is-a — наследование (Dog is-a Animal). has-a — композиция/агрегация (Car has-a Engine)."
+    },
+    {
+      "id": "JC-009",
+      "topic": "ООП",
+      "level": "Senior",
+      "question": "Что такое SOLID?",
+      "answer": "S — единственная ответственность, O — открытость/закрытость, L — подстановка Лисков, I — разделение интерфейсов, D — инверсия зависимостей."
+    },
+    {
+      "id": "JC-010",
+      "topic": "ООП",
+      "level": "Middle",
+      "question": "Что делает super и this?",
+      "answer": "this — ссылка на текущий объект (поля/методы/конструктор). super — доступ к членам и конструктору родителя."
+    },
+    {
+      "id": "JC-011",
+      "topic": "ООП",
+      "level": "Middle",
+      "question": "Что такое модификаторы доступа в Java?",
+      "answer": "private (только класс), default/package-private (пакет), protected (пакет + наследники), public (везде)."
+    },
+    {
+      "id": "JC-012",
+      "topic": "ООП",
+      "level": "Junior",
+      "question": "Что такое конструктор? Бывает ли конструктор по умолчанию?",
+      "answer": "Метод инициализации объекта, имя как у класса, без возвращаемого типа. Если конструкторов нет, компилятор создаёт пустой default-конструктор."
+    },
+    {
+      "id": "JC-013",
+      "topic": "ООП",
+      "level": "Middle",
+      "question": "Что такое геттеры/сеттеры и зачем они?",
+      "answer": "Методы доступа к private-полям; дают контроль валидации, инкапсуляцию, возможность менять внутреннюю реализацию."
+    },
+    {
+      "id": "JC-014",
+      "topic": "equals/hashCode",
+      "level": "Junior",
+      "question": "Разница между == и equals()?",
+      "answer": "== сравнивает ссылки (для примитивов — значения), equals() — логическое равенство (если переопределён)."
+    },
+    {
+      "id": "JC-015",
+      "topic": "equals/hashCode",
+      "level": "Middle",
+      "question": "Контракт equals() и hashCode(), почему переопределяют вместе?",
+      "answer": "Равные по equals() обязаны иметь одинаковый hashCode(). Иначе ломается HashMap/HashSet. equals: рефлексивен, симметричен, транзитивен, согласован."
+    },
+    {
+      "id": "JC-016",
+      "topic": "equals/hashCode",
+      "level": "Middle",
+      "question": "Что будет, если hashCode() возвращает константу?",
+      "answer": "Корректно, но все элементы в один бакет → поиск O(n)/O(log n), деградация HashMap."
+    },
+    {
+      "id": "JC-017",
+      "topic": "equals/hashCode",
+      "level": "Middle",
+      "question": "Какие методы есть у класса Object?",
+      "answer": "equals, hashCode, toString, getClass, clone, finalize, wait, notify, notifyAll."
+    },
+    {
+      "id": "JC-018",
+      "topic": "equals/hashCode",
+      "level": "Senior",
+      "question": "Можно ли использовать мутабельный объект как ключ HashMap?",
+      "answer": "Технически да, но опасно: при изменении полей меняется hashCode → объект 'теряется'. Ключи должны быть immutable."
+    },
+    {
+      "id": "JC-019",
+      "topic": "String",
+      "level": "Junior",
+      "question": "Почему String immutable?",
+      "answer": "Безопасность, потокобезопасность, кэш hashCode, работа String Pool. 'Изменение' создаёт новый объект."
+    },
+    {
+      "id": "JC-020",
+      "topic": "String",
+      "level": "Junior",
+      "question": "Разница String, StringBuilder, StringBuffer?",
+      "answer": "String immutable; StringBuilder мутабельный, небезопасный, быстрый; StringBuffer мутабельный, synchronized, медленнее."
+    },
+    {
+      "id": "JC-021",
+      "topic": "String",
+      "level": "Middle",
+      "question": "Что такое String Pool? Сколько объектов создаст new String(\"a\")?",
+      "answer": "Пул переиспользования литералов. new String(\"a\") — минимум 1 объект вне пула (+ литерал в пуле). intern() возвращает ссылку из пула."
+    },
+    {
+      "id": "JC-022",
+      "topic": "String",
+      "level": "Middle",
+      "question": "Чему равно \"a\"+\"b\"==\"ab\"?",
+      "answer": "true — конкатенация констант на компиляции даёт один литерал. С переменной (не final) результат в рантайме через StringBuilder → false."
+    },
+    {
+      "id": "JC-023",
+      "topic": "String",
+      "level": "Middle",
+      "question": "Как сравнивать строки правильно?",
+      "answer": "Через equals()/equalsIgnoreCase(), а не ==. Для сортировки — compareTo()."
+    },
+    {
+      "id": "JC-024",
+      "topic": "String",
+      "level": "Junior",
+      "question": "Что такое intern()?",
+      "answer": "Помещает строку в пул (или возвращает существующую ссылку), позволяя сравнивать через ==."
+    },
+    {
+      "id": "JC-025",
+      "topic": "Коллекции",
+      "level": "Junior",
+      "question": "Разница ArrayList и LinkedList?",
+      "answer": "ArrayList — массив, доступ O(1), вставка в середину O(n). LinkedList — двусвязный список, вставка/удаление O(1), доступ O(n). Обычно ArrayList."
+    },
+    {
+      "id": "JC-026",
+      "topic": "Коллекции",
+      "level": "Junior",
+      "question": "Разница List, Set, Map?",
+      "answer": "List — упорядочен, дубликаты, индекс. Set — уникальные. Map — ключ-значение. Map не наследует Collection."
+    },
+    {
+      "id": "JC-027",
+      "topic": "Коллекции",
+      "level": "Middle",
+      "question": "Как устроен HashMap? Что изменилось в Java 8?",
+      "answer": "Массив бакетов, индекс = hash & (n-1). Коллизии — список; с Java 8 при >8 в бакете и cap>=64 — красно-чёрное дерево (O(log n)). LF 0.75, resize при превышении."
+    },
+    {
+      "id": "JC-028",
+      "topic": "Коллекции",
+      "level": "Middle",
+      "question": "Разница HashMap, LinkedHashMap, TreeMap?",
+      "answer": "HashMap — без порядка O(1). LinkedHashMap — порядок вставки/доступа. TreeMap — отсортирован по ключам O(log n)."
+    },
+    {
+      "id": "JC-029",
+      "topic": "Коллекции",
+      "level": "Middle",
+      "question": "Разница HashMap и Hashtable? ConcurrentHashMap?",
+      "answer": "Hashtable устаревший, весь synchronized, без null. HashMap не synchronized, допускает null. ConcurrentHashMap — потокобезопасный без блокировки всей мапы, без null."
+    },
+    {
+      "id": "JC-030",
+      "topic": "Коллекции",
+      "level": "Middle",
+      "question": "Fail-fast и fail-safe итераторы?",
+      "answer": "Fail-fast (ArrayList, HashMap) бросают ConcurrentModificationException через modCount. Fail-safe (CopyOnWriteArrayList, ConcurrentHashMap) работают на копии."
+    },
+    {
+      "id": "JC-031",
+      "topic": "Коллекции",
+      "level": "Middle",
+      "question": "Почему нельзя удалять из List в for-each?",
+      "answer": "For-each использует Iterator; list.remove() меняет modCount → CME. Нужен iterator.remove() или removeIf()."
+    },
+    {
+      "id": "JC-032",
+      "topic": "Коллекции",
+      "level": "Middle",
+      "question": "Разница HashSet, LinkedHashSet, TreeSet?",
+      "answer": "HashSet — без порядка. LinkedHashSet — порядок вставки. TreeSet — отсортирован, O(log n)."
+    },
+    {
+      "id": "JC-033",
+      "topic": "Коллекции",
+      "level": "Middle",
+      "question": "Как работает HashSet внутри?",
+      "answer": "Обёртка над HashMap: элементы — ключи, значение — общий объект-заглушка."
+    },
+    {
+      "id": "JC-034",
+      "topic": "Коллекции",
+      "level": "Junior",
+      "question": "Чем Collection отличается от Collections?",
+      "answer": "Collection — корневой интерфейс. Collections — утилитный класс со статическими методами (sort, reverse, unmodifiableList)."
+    },
+    {
+      "id": "JC-035",
+      "topic": "Коллекции",
+      "level": "Middle",
+      "question": "Что такое Comparable и Comparator?",
+      "answer": "Comparable — естественный порядок, метод compareTo() в самом классе. Comparator — внешний компаратор, compare(), позволяет много стратегий сортировки."
+    },
+    {
+      "id": "JC-036",
+      "topic": "Коллекции",
+      "level": "Senior",
+      "question": "Сложность операций ArrayList и HashMap?",
+      "answer": "ArrayList: get O(1), add в конец амортизированно O(1), вставка/удаление O(n). HashMap: get/put в среднем O(1), худшее O(log n)."
+    },
+    {
+      "id": "JC-037",
+      "topic": "Коллекции",
+      "level": "Middle",
+      "question": "Что такое Queue, Deque, Stack?",
+      "answer": "Queue — FIFO. Deque — двусторонняя очередь (ArrayDeque). Stack — LIFO (устарел, лучше Deque)."
+    },
+    {
+      "id": "JC-038",
+      "topic": "Коллекции",
+      "level": "Senior",
+      "question": "Чем PriorityQueue отличается от обычной очереди?",
+      "answer": "Элементы упорядочены по приоритету (Comparable/Comparator), на основе бинарной кучи, не FIFO."
+    },
+    {
+      "id": "JC-039",
+      "topic": "Коллекции",
+      "level": "Middle",
+      "question": "Как создать неизменяемую коллекцию?",
+      "answer": "List.of()/Map.of() (Java 9), Collections.unmodifiableList(). Попытка изменить → UnsupportedOperationException."
+    },
+    {
+      "id": "JC-040",
+      "topic": "Исключения",
+      "level": "Junior",
+      "question": "Разница checked и unchecked исключений?",
+      "answer": "Checked (наследники Exception, кроме RuntimeException) требуют обработки. Unchecked (RuntimeException) — нет. Error — сбои JVM."
+    },
+    {
+      "id": "JC-041",
+      "topic": "Исключения",
+      "level": "Middle",
+      "question": "Иерархия исключений?",
+      "answer": "Throwable → Error и Exception. Exception → RuntimeException (unchecked) и прочие checked."
+    },
+    {
+      "id": "JC-042",
+      "topic": "Исключения",
+      "level": "Middle",
+      "question": "try-with-resources?",
+      "answer": "Автозакрытие ресурсов AutoCloseable в обратном порядке после try, без ручного finally."
+    },
+    {
+      "id": "JC-043",
+      "topic": "Исключения",
+      "level": "Middle",
+      "question": "Выполнится ли finally при return / System.exit()?",
+      "answer": "При return — да, перед возвратом. При System.exit() — нет (JVM завершается)."
+    },
+    {
+      "id": "JC-044",
+      "topic": "Исключения",
+      "level": "Middle",
+      "question": "Разница throw и throws?",
+      "answer": "throw — выброс исключения. throws — объявление в сигнатуре, какие checked метод может пробросить."
+    },
+    {
+      "id": "JC-045",
+      "topic": "Исключения",
+      "level": "Junior",
+      "question": "Можно ли поймать несколько исключений в одном catch?",
+      "answer": "Да, multi-catch: catch (IOException | SQLException e). Типы не должны быть в одной иерархии."
+    },
+    {
+      "id": "JC-046",
+      "topic": "Исключения",
+      "level": "Senior",
+      "question": "Что такое exception chaining?",
+      "answer": "Передача исходного исключения как cause: throw new MyException(\"msg\", e). Сохраняет первопричину в стеке."
+    },
+    {
+      "id": "JC-047",
+      "topic": "Исключения",
+      "level": "Middle",
+      "question": "Чем NPE отличается от NumberFormatException?",
+      "answer": "NPE — обращение к null-ссылке. NumberFormatException — невозможность распарсить строку в число (Integer.parseInt(\"abc\"))."
+    },
+    {
+      "id": "JC-048",
+      "topic": "Многопоточность",
+      "level": "Junior",
+      "question": "Процесс vs поток?",
+      "answer": "Процесс — отдельное адресное пространство. Поток — внутри процесса, делит heap, имеет свой стек."
+    },
+    {
+      "id": "JC-049",
+      "topic": "Многопоточность",
+      "level": "Junior",
+      "question": "Как создать поток?",
+      "answer": "Наследовать Thread, или реализовать Runnable/Callable + ExecutorService. Предпочтителен Runnable."
+    },
+    {
+      "id": "JC-050",
+      "topic": "Многопоточность",
+      "level": "Middle",
+      "question": "Что делает synchronized?",
+      "answer": "Взаимное исключение и видимость: один поток на монитор, happens-before, сброс кэшей в основную память."
+    },
+    {
+      "id": "JC-051",
+      "topic": "Многопоточность",
+      "level": "Middle",
+      "question": "Зачем volatile? Заменяет synchronized?",
+      "answer": "volatile — только видимость и запрет переупорядочивания, но не атомарность (i++). synchronized — и видимость, и атомарность."
+    },
+    {
+      "id": "JC-052",
+      "topic": "Многопоточность",
+      "level": "Middle",
+      "question": "Что такое deadlock и как избежать?",
+      "answer": "Взаимная блокировка ресурсов. Избежать: единый порядок локов, tryLock с таймаутом, минимизация вложенности."
+    },
+    {
+      "id": "JC-053",
+      "topic": "Многопоточность",
+      "level": "Middle",
+      "question": "Разница Runnable и Callable?",
+      "answer": "Runnable.run() — без возврата и checked. Callable.call() — возвращает Future и может бросать checked."
+    },
+    {
+      "id": "JC-054",
+      "topic": "Многопоточность",
+      "level": "Middle",
+      "question": "Что такое ThreadPool / ExecutorService?",
+      "answer": "Пул переиспользуемых потоков, управляет очередью и жизненным циклом, возвращает Future."
+    },
+    {
+      "id": "JC-055",
+      "topic": "Многопоточность",
+      "level": "Middle",
+      "question": "Разница wait()/notify() и sleep()?",
+      "answer": "wait() освобождает монитор (в synchronized), ждёт notify. sleep() не освобождает, просто пауза. wait — Object, sleep — Thread."
+    },
+    {
+      "id": "JC-056",
+      "topic": "Многопоточность",
+      "level": "Senior",
+      "question": "Что такое race condition?",
+      "answer": "Состояние гонки: результат зависит от порядка выполнения потоков при незащищённом доступе к общим данным."
+    },
+    {
+      "id": "JC-057",
+      "topic": "Многопоточность",
+      "level": "Senior",
+      "question": "Что такое livelock и starvation?",
+      "answer": "Livelock — потоки активны, но не прогрессируют (реагируют друг на друга). Starvation — поток не получает ресурс из-за приоритетов."
+    },
+    {
+      "id": "JC-058",
+      "topic": "Многопоточность",
+      "level": "Senior",
+      "question": "Что такое атомарные классы (AtomicInteger)?",
+      "answer": "Lock-free атомарные операции через CAS (compareAndSet), без synchronized, для счётчиков/флагов."
+    },
+    {
+      "id": "JC-059",
+      "topic": "Многопоточность",
+      "level": "Senior",
+      "question": "Что такое ThreadLocal?",
+      "answer": "Переменная со своим значением для каждого потока. Осторожно с пулами — нужно remove(), иначе утечка."
+    },
+    {
+      "id": "JC-060",
+      "topic": "Многопоточность",
+      "level": "Senior",
+      "question": "Lock vs synchronized?",
+      "answer": "Lock (ReentrantLock) гибче: tryLock, прерываемость, честность, несколько Condition. synchronized проще и авто-освобождается."
+    },
+    {
+      "id": "JC-061",
+      "topic": "Многопоточность",
+      "level": "Senior",
+      "question": "Что такое happens-before?",
+      "answer": "Модель памяти JMM: гарантии видимости и порядка операций между потоками (через synchronized, volatile, старт/join потоков)."
+    },
+    {
+      "id": "JC-062",
+      "topic": "Многопоточность",
+      "level": "Middle",
+      "question": "Состояния потока (Thread states)?",
+      "answer": "NEW, RUNNABLE, BLOCKED, WAITING, TIMED_WAITING, TERMINATED."
+    },
+    {
+      "id": "JC-063",
+      "topic": "Многопоточность",
+      "level": "Senior",
+      "question": "Что такое CompletableFuture?",
+      "answer": "Асинхронное вычисление с композицией (thenApply, thenCompose, allOf), неблокирующая обработка результатов."
+    },
+    {
+      "id": "JC-064",
+      "topic": "Многопоточность",
+      "level": "Middle",
+      "question": "Что делает join()?",
+      "answer": "Текущий поток ждёт завершения потока, на котором вызван join()."
+    },
+    {
+      "id": "JC-065",
+      "topic": "Многопоточность",
+      "level": "Senior",
+      "question": "Зачем нужен synchronized на статическом методе?",
+      "answer": "Блокируется монитор класса (Class-объект), а не экземпляра — общий для всех инстансов."
+    },
+    {
+      "id": "JC-066",
+      "topic": "JVM",
+      "level": "Junior",
+      "question": "JVM, JRE, JDK?",
+      "answer": "JVM исполняет байткод. JRE = JVM + библиотеки (запуск). JDK = JRE + инструменты (компиляция)."
+    },
+    {
+      "id": "JC-067",
+      "topic": "JVM",
+      "level": "Middle",
+      "question": "Что в стеке, что в куче?",
+      "answer": "Стек — локальные переменные, ссылки, кадры вызовов (на поток). Куча — объекты и массивы (общая)."
+    },
+    {
+      "id": "JC-068",
+      "topic": "JVM",
+      "level": "Middle",
+      "question": "Что такое GC и когда объект собирается?",
+      "answer": "GC освобождает память от недостижимых объектов (нет ссылок из GC roots). Момент не управляется, System.gc() — рекомендация."
+    },
+    {
+      "id": "JC-069",
+      "topic": "JVM",
+      "level": "Senior",
+      "question": "Memory leak при наличии GC?",
+      "answer": "Ненужные объекты остаются достижимыми (статические коллекции, незакрытые ресурсы, listeners, ThreadLocal) → OOM."
+    },
+    {
+      "id": "JC-070",
+      "topic": "JVM",
+      "level": "Senior",
+      "question": "Что такое поколения в куче (Young/Old)?",
+      "answer": "Young (Eden + Survivor) — новые объекты, minor GC. Old — долгоживущие, major/full GC. Основано на гипотезе о смертности молодых объектов."
+    },
+    {
+      "id": "JC-071",
+      "topic": "JVM",
+      "level": "Senior",
+      "question": "Что такое Metaspace (PermGen)?",
+      "answer": "Область вне кучи для метаданных классов. С Java 8 PermGen заменён на Metaspace (растёт в нативной памяти)."
+    },
+    {
+      "id": "JC-072",
+      "topic": "JVM",
+      "level": "Middle",
+      "question": "Этапы выполнения Java-программы?",
+      "answer": "Исходник .java → javac → байткод .class → загрузка ClassLoader → исполнение JVM (интерпретация + JIT-компиляция)."
+    },
+    {
+      "id": "JC-073",
+      "topic": "JVM",
+      "level": "Senior",
+      "question": "Что такое JIT-компилятор?",
+      "answer": "Just-In-Time компилирует часто исполняемый байткод (hot spots) в нативный код для ускорения."
+    },
+    {
+      "id": "JC-074",
+      "topic": "JVM",
+      "level": "Senior",
+      "question": "Что такое ClassLoader?",
+      "answer": "Загружает классы в JVM. Иерархия: Bootstrap → Platform/Extension → Application. Делегирование вверх (parent-first)."
+    },
+    {
+      "id": "JC-075",
+      "topic": "JVM",
+      "level": "Senior",
+      "question": "Что такое StackOverflowError и OutOfMemoryError?",
+      "answer": "SOF — переполнение стека (глубокая рекурсия). OOM — нехватка кучи/метаспейса."
+    },
+    {
+      "id": "JC-076",
+      "topic": "JVM",
+      "level": "Senior",
+      "question": "Что такое escape analysis?",
+      "answer": "Оптимизация JIT: если объект не 'убегает' из метода, он может размещаться на стеке/скаляризироваться, минуя кучу."
+    },
+    {
+      "id": "JC-077",
+      "topic": "Generics",
+      "level": "Middle",
+      "question": "Что такое дженерики и type erasure?",
+      "answer": "Типобезопасность на компиляции; в рантайме типы стираются (List<String> и List<Integer> — один класс). Нельзя new T(), instanceof List<String>."
+    },
+    {
+      "id": "JC-078",
+      "topic": "Generics",
+      "level": "Senior",
+      "question": "Что значит <? extends T> и <? super T> (PECS)?",
+      "answer": "Producer Extends (читаем), Consumer Super (пишем). Wildcards для гибкости с наследованием."
+    },
+    {
+      "id": "JC-079",
+      "topic": "Generics",
+      "level": "Senior",
+      "question": "Что такое bounded type parameter?",
+      "answer": "Ограничение типа: <T extends Number> — T только Number и наследники, даёт доступ к их методам."
+    },
+    {
+      "id": "JC-080",
+      "topic": "Generics",
+      "level": "Middle",
+      "question": "Можно ли создать массив дженериков?",
+      "answer": "Напрямую new T[] нельзя (из-за erasure). Обходят через Object[] и каст или Array.newInstance."
+    },
+    {
+      "id": "JC-081",
+      "topic": "Прочее",
+      "level": "Junior",
+      "question": "Примитивные типы Java?",
+      "answer": "byte, short, int, long, float, double, char, boolean. Имеют значения по умолчанию, хранятся в стеке (локальные)."
+    },
+    {
+      "id": "JC-082",
+      "topic": "Прочее",
+      "level": "Junior",
+      "question": "Что такое autoboxing?",
+      "answer": "Авто-преобразование примитив↔обёртка. Integer кэширует -128..127, поэтому == вне диапазона → false, сравнивай equals()."
+    },
+    {
+      "id": "JC-083",
+      "topic": "Прочее",
+      "level": "Middle",
+      "question": "final, finally, finalize?",
+      "answer": "final — модификатор (константа/нет наследования/нет override). finally — блок после try. finalize() — устаревший метод перед GC."
+    },
+    {
+      "id": "JC-084",
+      "topic": "Прочее",
+      "level": "Junior",
+      "question": "Что такое static?",
+      "answer": "Принадлежит классу: поле/метод/блок/вложенный класс. Доступ без объекта, общий для всех экземпляров."
+    },
+    {
+      "id": "JC-085",
+      "topic": "Прочее",
+      "level": "Middle",
+      "question": "Что выведет 0.1 + 0.2?",
+      "answer": "0.30000000000000004 — особенности double. Для денег — BigDecimal (связано с багом округления в банковском API!)."
+    },
+    {
+      "id": "JC-086",
+      "topic": "Прочее",
+      "level": "Middle",
+      "question": "Разница int и Integer?",
+      "answer": "int — примитив (значение, не null). Integer — обёртка-объект (может быть null, методы, кэш -128..127)."
+    },
+    {
+      "id": "JC-087",
+      "topic": "Прочее",
+      "level": "Junior",
+      "question": "Что такое пакет (package) и import?",
+      "answer": "Пакет — пространство имён для классов. import подключает классы из других пакетов."
+    },
+    {
+      "id": "JC-088",
+      "topic": "Прочее",
+      "level": "Middle",
+      "question": "Что такое перечисление (enum)?",
+      "answer": "Тип с фиксированным набором констант; может иметь поля, конструктор, методы. Потокобезопасный синглтон для значений."
+    },
+    {
+      "id": "JC-089",
+      "topic": "Прочее",
+      "level": "Middle",
+      "question": "Что такое аннотации?",
+      "answer": "Метаданные для кода (@Override, @Deprecated, @FunctionalInterface). Обрабатываются компилятором/рантаймом/инструментами."
+    },
+    {
+      "id": "JC-090",
+      "topic": "Прочее",
+      "level": "Senior",
+      "question": "Что такое рефлексия (Reflection)?",
+      "answer": "API для анализа и изменения классов/методов/полей в рантайме. Используется фреймворками (Spring, JUnit), но медленна и ломает инкапсуляцию."
+    },
+    {
+      "id": "JC-091",
+      "topic": "Прочее",
+      "level": "Middle",
+      "question": "Передача параметров: by value или by reference?",
+      "answer": "Java всегда by value. Для объектов передаётся копия ссылки (можно менять объект, но не переприсвоить исходную ссылку)."
+    },
+    {
+      "id": "JC-092",
+      "topic": "Прочее",
+      "level": "Junior",
+      "question": "Что такое массив? Чем отличается от ArrayList?",
+      "answer": "Массив — фиксированный размер, примитивы/объекты, быстрый. ArrayList — динамический, только объекты, методы коллекций."
+    },
+    {
+      "id": "JC-093",
+      "topic": "Прочее",
+      "level": "Junior",
+      "question": "Что такое var (Java 10)?",
+      "answer": "Локальный вывод типа: var list = new ArrayList<String>(). Тип определяется компилятором, не динамическая типизация."
+    },
+    {
+      "id": "JC-094",
+      "topic": "Прочее",
+      "level": "Middle",
+      "question": "Что такое record (Java 16)?",
+      "answer": "Иммутабельный класс-данные: авто equals/hashCode/toString/геттеры. record Point(int x, int y){}."
+    },
+    {
+      "id": "JC-095",
+      "topic": "Прочее",
+      "level": "Senior",
+      "question": "Что такое immutable-класс и как создать?",
+      "answer": "Класс, состояние которого не меняется: final класс, private final поля, без сеттеров, защитные копии в конструкторе/геттерах."
+    },
+    {
+      "id": "JC-096",
+      "topic": "Прочее",
+      "level": "Middle",
+      "question": "Разница между break и continue?",
+      "answer": "break прерывает цикл/switch. continue пропускает текущую итерацию и переходит к следующей."
+    },
+    {
+      "id": "JC-097",
+      "topic": "Прочее",
+      "level": "Middle",
+      "question": "Что такое тернарный оператор?",
+      "answer": "Сокращённый if-else: result = condition ? a : b."
+    },
+    {
+      "id": "JC-098",
+      "topic": "Прочее",
+      "level": "Senior",
+      "question": "Что такое паттерн Singleton и как реализовать потокобезопасно?",
+      "answer": "Один экземпляр на приложение. Безопасно: enum, или статическое поле с инициализацией, или double-checked locking с volatile."
+    },
+    {
+      "id": "JC-099",
+      "topic": "Прочее",
+      "level": "Senior",
+      "question": "Что такое паттерн Builder и зачем?",
+      "answer": "Пошаговое создание сложного объекта с читаемым API; полезен при многих опциональных параметрах вместо телескопических конструкторов."
+    },
+    {
+      "id": "JC-100",
+      "topic": "Прочее",
+      "level": "Senior",
+      "question": "Что такое паттерн Factory?",
+      "answer": "Создание объектов без указания конкретного класса; инкапсулирует логику инстанцирования."
+    },
+    {
+      "id": "JC-101",
+      "topic": "Прочее",
+      "level": "Middle",
+      "question": "Что такое switch expression (Java 14)?",
+      "answer": "Switch как выражение со стрелками: var r = switch(x){ case 1 -> \"one\"; default -> \"other\"; }; без проваливания."
+    },
+    {
+      "id": "JC-102",
+      "topic": "Прочее",
+      "level": "Junior",
+      "question": "Что такое цикл for-each?",
+      "answer": "Упрощённый перебор: for (String s : list). Использует Iterator под капотом."
+    },
+    {
+      "id": "JC-103",
+      "topic": "Прочее",
+      "level": "Senior",
+      "question": "Что такое сериализация?",
+      "answer": "Преобразование объекта в поток байт (Serializable) для хранения/передачи. transient-поля не сериализуются. serialVersionUID для версионности."
+    },
+    {
+      "id": "JC-104",
+      "topic": "Прочее",
+      "level": "Middle",
+      "question": "Что такое cast и ClassCastException?",
+      "answer": "Приведение типа. Неверный downcast в рантайме → ClassCastException. Проверка через instanceof."
+    },
+    {
+      "id": "JC-105",
+      "topic": "Прочее",
+      "level": "Senior",
+      "question": "Что такое pattern matching for instanceof (Java 16)?",
+      "answer": "if (obj instanceof String s) — авто-каст в переменную s без явного приведения."
+    },
+    {
+      "id": "JC-106",
+      "topic": "Java 8",
+      "level": "Middle",
+      "question": "Что такое лямбда и функциональный интерфейс?",
+      "answer": "Лямбда — анонимная функция. Функциональный интерфейс — один абстрактный метод (@FunctionalInterface): Runnable, Comparator, Function, Predicate."
+    },
+    {
+      "id": "JC-107",
+      "topic": "Java 8",
+      "level": "Middle",
+      "question": "Что такое Stream API?",
+      "answer": "Конвейер функциональной обработки (map/filter/reduce). Не хранит данные, ленив, одноразов. Промежуточные ленивы, терминальные запускают."
+    },
+    {
+      "id": "JC-108",
+      "topic": "Java 8",
+      "level": "Middle",
+      "question": "Зачем Optional?",
+      "answer": "Контейнер для возможного отсутствия значения вместо null. orElse, orElseThrow, map, ifPresent. Не использовать как поле/параметр."
+    },
+    {
+      "id": "JC-109",
+      "topic": "Java 8",
+      "level": "Senior",
+      "question": "Разница map() и flatMap()?",
+      "answer": "map — 1:1 трансформация. flatMap — разворачивает вложенные потоки (Stream<List<T>> → Stream<T>)."
+    },
+    {
+      "id": "JC-110",
+      "topic": "Java 8",
+      "level": "Middle",
+      "question": "Основные функциональные интерфейсы?",
+      "answer": "Function<T,R>, Predicate<T>, Consumer<T>, Supplier<T>, BiFunction, UnaryOperator."
+    },
+    {
+      "id": "JC-111",
+      "topic": "Java 8",
+      "level": "Middle",
+      "question": "Что такое method reference?",
+      "answer": "Сокращение лямбды: System.out::println, String::length, ClassName::new (конструктор)."
+    },
+    {
+      "id": "JC-112",
+      "topic": "Java 8",
+      "level": "Senior",
+      "question": "Разница intermediate и terminal операций Stream?",
+      "answer": "Intermediate (filter, map, sorted) ленивы и возвращают Stream. Terminal (collect, forEach, count, reduce) запускают конвейер и возвращают результат."
+    },
+    {
+      "id": "JC-113",
+      "topic": "Java 8",
+      "level": "Senior",
+      "question": "Что такое Collectors?",
+      "answer": "Утилиты терминальной операции collect: toList, toMap, groupingBy, joining, counting, partitioningBy."
+    },
+    {
+      "id": "JC-114",
+      "topic": "Java 8",
+      "level": "Senior",
+      "question": "Что делает reduce()?",
+      "answer": "Сворачивает поток в одно значение (сумма, конкатенация) через ассоциативную функцию."
+    },
+    {
+      "id": "JC-115",
+      "topic": "Java 8",
+      "level": "Middle",
+      "question": "Default-методы в интерфейсах — зачем?",
+      "answer": "Добавлять методы с реализацией в интерфейс без поломки существующих реализаций (эволюция API)."
+    },
+    {
+      "id": "JC-116",
+      "topic": "Java 8",
+      "level": "Senior",
+      "question": "Parallel Stream — плюсы и риски?",
+      "answer": "parallelStream() распараллеливает через ForkJoinPool. Риски: накладные расходы, проблемы с разделяемым состоянием, не всегда быстрее."
+    },
+    {
+      "id": "JC-117",
+      "topic": "Java 8",
+      "level": "Middle",
+      "question": "Что такое Stream.collect(Collectors.groupingBy)?",
+      "answer": "Группирует элементы по ключу в Map<K, List<V>>, аналог GROUP BY в SQL."
+    }
+  ]
+}

@@ -1,0 +1,86 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: trainer-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: trainer
+      POSTGRES_PASSWORD: trainer
+      POSTGRES_DB: trainer
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/01_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+      - ./db/02_seed.sql:/docker-entrypoint-initdb.d/02_seed.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U trainer -d trainer"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: trainer-backend
+    restart: unless-stopped
+    environment:
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_NAME: trainer
+      DB_USER: trainer
+      DB_PASSWORD: trainer
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./backend/data:/app/data:ro
+    healthcheck:
+      # backend считается "живым", когда /health отвечает 200
+      test: ["CMD-SHELL", "python -c \"import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health').status==200 else 1)\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # Адреса попадают в собранный JS (браузер обращается к ним напрямую).
+        # Для VPS замени localhost на IP/домен сервера.
+        VITE_API_URL: http://localhost:8000
+        VITE_MOCK_URL: http://localhost:8080
+    container_name: trainer-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  mock-api:
+    image: wiremock/wiremock:3.5.4
+    container_name: trainer-mock-api
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./mock-api/mappings:/home/wiremock/mappings:ro
+    command: ["--global-response-templating", "--verbose"]
+
+  adminer:
+    image: adminer:4
+    container_name: trainer-adminer
+    restart: unless-stopped
+    ports:
+      - "8081:8080"
+    depends_on:
+      - postgres
+
+volumes:
+  pgdata:
