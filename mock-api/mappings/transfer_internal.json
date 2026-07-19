@@ -1,0 +1,32 @@
+{
+  "request": {
+    "method": "POST",
+    "urlPath": "/api/v1/transfers/internal",
+    "headers": {
+      "Idempotency-Key": { "matches": ".+" },
+      "Authorization":   { "matches": "Bearer .+" }
+    },
+    "bodyPatterns": [
+      { "matchesJsonPath": "$.source_account_id" },
+      { "matchesJsonPath": "$.destination_account_id" },
+      { "matchesJsonPath": "$.amount" }
+    ]
+  },
+  "response": {
+    "status": 200,
+    "headers": { "Content-Type": "application/json" },
+    "jsonBody": {
+      "status": "COMPLETED",
+      "data": {
+        "transaction_id": "c0000099-0000-0000-0000-000000000099",
+        "source_account_id": "{{jsonPath request.body '$.source_account_id'}}",
+        "destination_account_id": "{{jsonPath request.body '$.destination_account_id'}}",
+        "amount": 1500.00,
+        "currency": "{{jsonPath request.body '$.currency'}}"
+      }
+    }
+  },
+  "metadata": {
+    "comment": "BUG: amount в ответе всегда 1500.00 (теряется копейка 1500.50 -> 1500.00)"
+  }
+}

@@ -1,0 +1,334 @@
+{
+  "meta": {
+    "title": "QA Automation Interview Trainer — Question Bank",
+    "version": "2.0",
+    "db_dialect": "PostgreSQL",
+    "schemas": ["ecommerce", "banking"],
+    "note": "Таблица order пишется в двойных кавычках: \"order\"."
+  },
+  "sql_questions": [
+    {
+      "id": "SQL-01",
+      "level": "easy",
+      "schema": "ecommerce",
+      "topic": "JOIN/NULL",
+      "question": "Выведи всех клиентов (email, name), у которых нет ни одного заказа.",
+      "answer": "SELECT c.id, c.email, c.name\nFROM client c\nLEFT JOIN \"order\" o ON o.client_id = c.id\nWHERE o.id IS NULL;",
+      "hint": "🟢 ТАБЛИЦЫ: client (id PK) и \"order\" (client_id FK → client.id).\n\n🔗 СВЯЗЬ: client.id = \"order\".client_id — один ко многим (у клиента может быть несколько заказов).\n\n💡 ПОДХОД: LEFT JOIN сохраняет ВСЕ строки из client, подставляя NULL в колонки \"order\" для клиентов БЕЗ заказов. Затем WHERE o.id IS NULL отсеивает тех, у кого заказы есть.\n\n⚠️ ОШИБКИ: Не пиши WHERE o.id = NULL — сравнение с NULL всегда даёт UNKNOWN. Только IS NULL / IS NOT NULL.",
+      "expected": "Клиенты без связанных строк в order (должен быть Дмитрий Новиков — BUG-10)."
+    },
+    {
+      "id": "SQL-02",
+      "level": "easy",
+      "schema": "ecommerce",
+      "topic": "JOIN",
+      "question": "Все заказы с именем клиента и типом доставки.",
+      "answer": "SELECT o.id, c.name, st.type AS shipping_type, o.sum, o.status\nFROM \"order\" o\nJOIN client c ON c.id = o.client_id\nLEFT JOIN shipping_type st ON st.id = o.shipping_type_id;",
+      "hint": "🟢 ТАБЛИЦЫ: \"order\" (client_id FK, shipping_type_id FK), client (id PK, name), shipping_type (id PK, type).\n\n🔗 СВЯЗИ:\n• \"order\".client_id → client.id (обязательная, каждый заказ имеет клиента)\n• \"order\".shipping_type_id → shipping_type.id (может быть NULL, если тип не указан)\n\n💡 ПОДХОД: JOIN для client — гарантированно есть клиент. LEFT JOIN для shipping_type — на случай, если shipping_type_id IS NULL (не потеряем заказ).\n\n⚠️ ОШИБКИ: Если оба JOIN — INNER, потеряешь заказы без типа доставки.",
+      "expected": "Список заказов с человекочитаемыми полями."
+    },
+    {
+      "id": "SQL-03",
+      "level": "easy",
+      "schema": "ecommerce",
+      "topic": "filter/date",
+      "question": "Заказы за последние 30 дней.",
+      "answer": "SELECT * FROM \"order\"\nWHERE created_date >= CURRENT_DATE - INTERVAL '30 days';",
+      "hint": "🟢 ТАБЛИЦА: \"order\" (created_date DATE).\n\n💡 ПОДХОД: CURRENT_DATE — сегодняшняя дата, INTERVAL '30 days' — 30 дней. Вычитание даёт дату 30 дней назад. Берём все заказы от этой даты до сегодня.\n\n⚠️ ОШИБКИ: CURRENT_TIMESTAMP вместо CURRENT_DATE — получишь время, интервал может не совпасть. Или NOW() — зависит от часового пояса.",
+      "expected": "Свежие заказы (должен быть заказ #5, созданный 1 день назад)."
+    },
+    {
+      "id": "SQL-04",
+      "level": "easy",
+      "schema": "ecommerce",
+      "topic": "group/data quality",
+      "question": "Покажи все уникальные статусы заказов и их количество (поиск мусорных значений).",
+      "answer": "SELECT status, COUNT(*) FROM \"order\" GROUP BY status ORDER BY 2 DESC;",
+      "hint": "🟢 ТАБЛИЦА: \"order\" (status VARCHAR — COMPLETED, NEW, ...).\n\n💡 ПОДХОД: GROUP BY status группирует все строки по значению статуса, COUNT(*) считает число заказов в каждой группе. ORDER BY 2 DESC сортирует по второму столбцу (количеству) по убыванию.\n\n🐞 БАГ-ХАНТИНГ: При тестировании смотри на неожиданные статусы. В нашей БД есть мусорный 'in_progres' (опечатка, должно быть 'in_progress') — BUG-3.",
+      "expected": "Список статусов; ищем неожиданные вроде 'in_progres'."
+    },
+    {
+      "id": "SQL-05",
+      "level": "medium",
+      "schema": "ecommerce",
+      "topic": "aggregation/bug-hunt",
+      "question": "Найди заказы, где order.sum НЕ совпадает с SUM(count*price) по позициям.",
+      "answer": "SELECT o.id, o.sum AS stored_sum, SUM(op.count * op.price) AS real_sum\nFROM \"order\" o\nJOIN order_product op ON op.order_id = o.id\nGROUP BY o.id, o.sum\nHAVING o.sum <> SUM(op.count * op.price);",
+      "hint": "🟢 ТАБЛИЦЫ: \"order\" (id PK, sum NUMERIC — хранимая сумма), order_product (order_id FK, count INT, price NUMERIC).\n\n🔗 СВЯЗЬ: \"order\".id = order_product.order_id — каждая позиция принадлежит заказу.\n\n💡 ПОДХОД: \n• JOIN соединяет заказ с его позициями.\n• SUM(op.count * op.price) вычисляет РЕАЛЬНУЮ сумму заказа (цена × количество).\n• GROUP BY o.id, o.sum — группируем по заказу.\n• HAVING (не WHERE!) фильтрует после агрегации — оставляем только строки с расхождением.\n\n🐞 В нашей БД: заказ #2: хранимая сумма = 45000.99, реальная = 45000.00 — BUG-1.\n\n⚠️ ОШИБКИ: Нельзя WHERE SUM(...) — агрегаты только в HAVING.",
+      "expected": "Заказы с расхождением суммы (заказ #2 с багом)."
+    },
+    {
+      "id": "SQL-06",
+      "level": "medium",
+      "schema": "ecommerce",
+      "topic": "aggregation/top-n",
+      "question": "ТОП-5 товаров по проданному количеству.",
+      "answer": "SELECT p.id, p.name, SUM(op.count) AS total_qty\nFROM order_product op\nJOIN product p ON p.id = op.product_id\nGROUP BY p.id, p.name\nORDER BY total_qty DESC\nLIMIT 5;",
+      "hint": "🟢 ТАБЛИЦЫ: product (id PK, name), order_product (product_id FK, count INT).\n\n🔗 СВЯЗЬ: product.id = order_product.product_id.\n\n💡 ПОДХОД:\n• JOIN product к позициям заказов — получаем имя товара.\n• SUM(op.count) — суммарное проданное количество по каждому товару.\n• GROUP BY p.id, p.name — группируем по товару.\n• ORDER BY total_qty DESC — сортировка по убыванию.\n• LIMIT 5 — только первые 5 строк.\n\n⚠️ ОШИБКИ: Если не включить p.name в GROUP BY, PostgreSQL 16+ даст ошибку — все неагрегированные колонки должны быть в GROUP BY.",
+      "expected": "5 самых продаваемых товаров."
+    },
+    {
+      "id": "SQL-07",
+      "level": "medium",
+      "schema": "ecommerce",
+      "topic": "WHERE vs HAVING",
+      "question": "Клиенты, потратившие больше 10000 только по COMPLETED-заказам.",
+      "answer": "SELECT c.id, c.name, SUM(o.sum) AS total_spent\nFROM client c\nJOIN \"order\" o ON o.client_id = c.id\nWHERE o.status = 'COMPLETED'\nGROUP BY c.id, c.name\nHAVING SUM(o.sum) > 10000;",
+      "hint": "🟢 ТАБЛИЦЫ: client (id PK, name), \"order\" (client_id FK, sum NUMERIC, status VARCHAR).\n\n💡 КЛЮЧЕВОЙ КОНЦЕПТ — WHERE vs HAVING:\n• WHERE o.status = 'COMPLETED' — фильтрует строки ДО агрегации. Берём только завершённые заказы.\n• GROUP BY c.id, c.name — агрегируем по клиенту.\n• HAVING SUM(o.sum) > 10000 — фильтрует ПОСЛЕ агрегации. Оставляем только крупных.\n\n⚠️ ОШИБКИ: Нельзя status = 'COMPLETED' в HAVING — это колонка строки, не агрегат. Наоборот — SUM(o.sum) > 10000 нельзя в WHERE.",
+      "expected": "Крупные клиенты среди COMPLETED-заказов."
+    },
+    {
+      "id": "SQL-08",
+      "level": "medium",
+      "schema": "ecommerce",
+      "topic": "aggregation/avg",
+      "question": "Средний чек и число заказов по каждому типу доставки.",
+      "answer": "SELECT st.type, ROUND(AVG(o.sum),2) AS avg_order, COUNT(*) AS orders_cnt\nFROM \"order\" o\nJOIN shipping_type st ON st.id = o.shipping_type_id\nGROUP BY st.type;",
+      "hint": "🟢 ТАБЛИЦЫ: \"order\" (shipping_type_id FK, sum NUMERIC), shipping_type (id PK, type — Courier/Pickup/Post).\n\n💡 ПОДХОД:\n• JOIN shipping_type — получаем читаемое название типа вместо числового ID.\n• AVG(o.sum) — средняя сумма заказа в группе.\n• ROUND(..., 2) — округляем до копеек.\n• COUNT(*) — число заказов в каждой группе.\n\n⚠️ ОШИБКИ: Без JOIN получишь цифры (shipping_type_id=1,2,3) вместо осмысленных названий. С INNER JOIN потеряешь заказы с shipping_type_id IS NULL.",
+      "expected": "Метрики по типам доставки (Courier, Pickup, Post)."
+    },
+    {
+      "id": "SQL-09",
+      "level": "medium",
+      "schema": "ecommerce",
+      "topic": "integrity/bug-hunt",
+      "question": "Заказы, у которых адрес доставки принадлежит другому клиенту.",
+      "answer": "SELECT o.id AS order_id, o.client_id AS order_client, a.client_id AS address_client\nFROM \"order\" o\nJOIN address a ON a.id = o.shipping_address_id\nWHERE a.client_id <> o.client_id;",
+      "hint": "🟢 ТАБЛИЦЫ: \"order\" (shipping_address_id FK → address.id, client_id FK → client.id), address (id PK, client_id FK → client.id).\n\n🔗 ДВЕ СВЯЗИ С client:\n• \"order\".client_id — кто сделал заказ.\n• address.client_id — кому принадлежит адрес.\n\n💡 ПОДХОД: JOIN \"order\" с address по shipping_address_id. Затем сравниваем, совпадает ли владелец адреса (address.client_id) с заказчиком (\"order\".client_id).\n\n🐞 В нашей БД: заказ #3 — заказчик Алексей (client_id=3), но адрес принадлежит Ивану (client_id=1) — BUG-2.\n\n⚠️ ОШИБКИ: Если shipping_address_id IS NULL, JOIN пропустит такой заказ — используй LEFT JOIN для полноты.",
+      "expected": "Нарушение целостности данных (заказ #3 с чужим адресом)."
+    },
+    {
+      "id": "SQL-10",
+      "level": "medium",
+      "schema": "ecommerce",
+      "topic": "integrity/orphans",
+      "question": "Позиции заказов, ссылающиеся на несуществующий товар.",
+      "answer": "SELECT op.*\nFROM order_product op\nLEFT JOIN product p ON p.id = op.product_id\nWHERE p.id IS NULL;",
+      "hint": "🟢 ТАБЛИЦЫ: order_product (product_id FK → product.id), product (id PK).\n\n💡 ПОДХОД — поиск «висящих» FK:\n• LEFT JOIN сохраняет все строки из order_product.\n• Если товар существует, колонки product заполнены.\n• Если товара нет — все колонки product = NULL.\n• WHERE p.id IS NULL — оставляет ТОЛЬКО строки без соответствующего товара.\n\n⚠️ ОШИБКИ: Не перепутай LEFT JOIN с INNER JOIN — INNER JOIN отбросит висящие строки, и ты ничего не найдёшь.",
+      "expected": "Orphan-записи (в идеале — пустой результат, иначе нарушение ссылочной целостности)."
+    },
+    {
+      "id": "SQL-11",
+      "level": "medium",
+      "schema": "banking",
+      "topic": "unique constraint",
+      "question": "Найди дубликаты idempotency_key в transactions.",
+      "answer": "SELECT idempotency_key, COUNT(*)\nFROM transactions\nGROUP BY idempotency_key\nHAVING COUNT(*) > 1;",
+      "hint": "🟢 ТАБЛИЦА: transactions (idempotency_key VARCHAR — должен быть уникальным для идемпотентности).\n\n💡 ПОДХОД:\n• GROUP BY idempotency_key — группируем все строки по ключу.\n• COUNT(*) — считаем, сколько строк на каждый ключ.\n• HAVING COUNT(*) > 1 — оставляем только те ключи, где больше одной строки (дубликаты).\n\n🐞 В нашей БД: 'key-DUP' встречается ДВАЖДЫ (c0000006 и c0000007) — BUG-8. Индекс UNIQUE на idempotency_key намеренно НЕ создан.\n\n⚠️ Прод: такой индекс ОБЯЗАТЕЛЕН для идемпотентности — иначе возможны двойные списания.",
+      "expected": "'key-DUP' с count=2 (дубликат идемпотентного ключа)."
+    },
+    {
+      "id": "SQL-12",
+      "level": "medium",
+      "schema": "banking",
+      "topic": "business logic",
+      "question": "Зависшие переводы: PENDING старше 1 часа.",
+      "answer": "SELECT * FROM transactions\nWHERE status = 'PENDING'\n  AND created_at < now() - INTERVAL '1 hour';",
+      "hint": "🟢 ТАБЛИЦА: transactions (status VARCHAR — PENDING/COMPLETED/FAILED, created_at TIMESTAMP).\n\n💡 ПОДХОД:\n• status = 'PENDING' — только незавершённые.\n• created_at < now() - INTERVAL '1 hour' — созданные более часа назад.\n• now() — текущие дата+время.\n\n🐞 В нашей БД: транзакция c0000002 имеет статус PENDING и создана 3 часа назад — BUG-4.\n\n⚠️ В проде это критично: PENDING-транзакции должны откатываться (saga-паттерн) или переходить в FAILED по таймауту.",
+      "expected": "Транзакция c0000002 — зависла 3 часа назад."
+    },
+    {
+      "id": "SQL-13",
+      "level": "hard",
+      "schema": "banking",
+      "topic": "reconciliation",
+      "question": "Сверь хранимый баланс accounts.balance с рассчитанным по COMPLETED-транзакциям.",
+      "answer": "SELECT a.id, a.balance AS stored_balance,\n       COALESCE(SUM(CASE WHEN t.destination_account_id = a.id THEN t.amount END),0)\n     - COALESCE(SUM(CASE WHEN t.source_account_id = a.id THEN t.amount END),0) AS calculated_balance\nFROM accounts a\nLEFT JOIN transactions t\n  ON (t.source_account_id = a.id OR t.destination_account_id = a.id)\n AND t.status = 'COMPLETED'\nGROUP BY a.id, a.balance\nHAVING a.balance <>\n       COALESCE(SUM(CASE WHEN t.destination_account_id = a.id THEN t.amount END),0)\n     - COALESCE(SUM(CASE WHEN t.source_account_id = a.id THEN t.amount END),0);",
+      "hint": "🟢 ТАБЛИЦЫ: accounts (id PK, balance DECIMAL), transactions (source_account_id FK, destination_account_id FK, amount DECIMAL, status).\n\n💡 СЛОЖНЫЙ ПОДХОД — сверка (reconciliation):\n1. LEFT JOIN transactions по двум условиям: счёт может быть И источником, И назначением (OR).\n2. CASE внутри SUM: если счёт — назначение, плюсуем amount; если источник — минусуем.\n3. COALESCE(..., 0): если транзакций нет, SUM вернёт NULL — заменяем на 0.\n4. HAVING: оставляем только счета, где хранимый баланс ≠ расчётный.\n\n⚠️ ОШИБКИ: Без COALESCE любой счёт без транзакций даст NULL в calculated_balance и не попадёт в результат HAVING.",
+      "expected": "Счета с расхождением баланса."
+    },
+    {
+      "id": "SQL-14",
+      "level": "easy",
+      "schema": "banking",
+      "topic": "business logic",
+      "question": "Переводы самому себе (source = destination).",
+      "answer": "SELECT * FROM transactions\nWHERE source_account_id = destination_account_id;",
+      "hint": "🟢 ТАБЛИЦА: transactions (source_account_id UUID, destination_account_id UUID).\n\n💡 ПОДХОД: Простое сравнение двух UUID-колонок одной строки. Если равны — перевод самому себе.\n\n🐞 В нашей БД: транзакция c0000003 — source и destination оба указывают на счёт a0000001 — BUG-5.\n\n⚠️ В проде: такие переводы должны блокироваться на уровне API (валидация перед записью в БД). Бессмысленная операция, может быть признаком атаки или ошибки интеграции.",
+      "expected": "Транзакция c0000003 — перевод самому себе."
+    },
+    {
+      "id": "SQL-15",
+      "level": "medium",
+      "schema": "banking",
+      "topic": "business rule violation",
+      "question": "COMPLETED-переводы со счетов в статусе BLOCKED/FROZEN.",
+      "answer": "SELECT t.*\nFROM transactions t\nJOIN accounts a ON a.id = t.source_account_id\nWHERE t.status = 'COMPLETED'\n  AND a.status IN ('BLOCKED','FROZEN');",
+      "hint": "🟢 ТАБЛИЦЫ: transactions (source_account_id FK, status), accounts (id PK, status — ACTIVE/BLOCKED/FROZEN).\n\n💡 ПОДХОД:\n• JOIN accounts по source_account_id — получаем статус счёта-источника.\n• t.status = 'COMPLETED' — транзакция прошла.\n• a.status IN ('BLOCKED','FROZEN') — при этом счёт был заблокирован. Противоречие!\n\n🐞 В нашей БД: транзакция c0000004 — COMPLETED со счёта a0000003, который в статусе FROZEN — BUG-6.\n\n⚠️ В проде: перед выполнением перевода проверка статуса счёта ОБЯЗАТЕЛЬНА. Это баг бизнес-логики, если транзакция прошла.",
+      "expected": "Транзакция c0000004 — нарушение бизнес-правила."
+    },
+    {
+      "id": "SQL-16",
+      "level": "medium",
+      "schema": "banking",
+      "topic": "data quality",
+      "question": "Транзакции с валютой, не совпадающей с валютой счёта-источника.",
+      "answer": "SELECT t.id, t.currency AS tx_currency, a.currency AS acc_currency\nFROM transactions t\nJOIN accounts a ON a.id = t.source_account_id\nWHERE t.currency <> a.currency;",
+      "hint": "🟢 ТАБЛИЦЫ: transactions (currency CHAR(3), source_account_id FK), accounts (id PK, currency CHAR(3) — RUB/USD/EUR).\n\n💡 ПОДХОД:\n• JOIN accounts по source_account_id.\n• Сравниваем t.currency (валюта перевода) с a.currency (валюта счёта).\n• Если не совпадают — потенциальная ошибка (или нужна конвертация).\n\n🐞 В нашей БД: транзакция c0000005 — валюта EUR, но счёт-источник a0000001 в RUB — BUG-7.\n\n⚠️ В проде: если мультивалютность не поддерживается, такие транзакции должны отклоняться. Если поддерживается — нужен курс конвертации.",
+      "expected": "Транзакция c0000005 — EUR со счёта в RUB."
+    },
+    {
+      "id": "SQL-17",
+      "level": "easy",
+      "schema": "banking",
+      "topic": "outbox/kafka",
+      "question": "Необработанные события outbox старше 5 минут.",
+      "answer": "SELECT * FROM outbox_events\nWHERE processed = false\n  AND created_at < now() - INTERVAL '5 minutes';",
+      "hint": "🟢 ТАБЛИЦА: outbox_events (id BIGSERIAL PK, processed BOOLEAN, created_at TIMESTAMP, event_type VARCHAR, payload JSON).\n\n💡 КОНТЕКСТ — паттерн Outbox:\n• Transfer Service записывает событие в outbox_events внутри той же транзакции, что и перевод.\n• Отдельный процесс (Kafka Connect / Debezium) читает события, публикует в Kafka и ставит processed=true.\n• Если processed=false дольше N минут — consumer отстаёт или упал.\n\n🐞 В нашей БД: событие e0000002 не обработано уже 2 часа — BUG-8(b).\n\n⚠️ В проде: алерт на непрочитанные outbox-события старше 5 минут — критичен для мониторинга.",
+      "expected": "Событие e0000002 — отставание consumer-а."
+    },
+    {
+      "id": "SQL-18",
+      "level": "hard",
+      "schema": "banking",
+      "topic": "window functions",
+      "question": "Последняя транзакция по каждому счёту-источнику.",
+      "answer": "SELECT * FROM (\n  SELECT t.*,\n         ROW_NUMBER() OVER (PARTITION BY source_account_id ORDER BY created_at DESC) AS rn\n  FROM transactions t\n) x\nWHERE rn = 1;",
+      "hint": "🟢 ТАБЛИЦА: transactions (source_account_id UUID, created_at TIMESTAMP).\n\n💡 ПОДХОД — оконная функция ROW_NUMBER():\n1. PARTITION BY source_account_id — делим все строки на группы по счёту-источнику.\n2. ORDER BY created_at DESC — внутри каждой группы сортируем от новых к старым.\n3. ROW_NUMBER() — нумерует строки внутри каждой группы (1 = самая новая).\n4. Подзапрос (derived table) нужен, потому что WHERE не видит оконные функции.\n5. WHERE rn = 1 — берём по одной (самой свежей) строке на каждый счёт.\n\n⚠️ ОШИБКИ: Нельзя WHERE ROW_NUMBER()=1 снаружи подзапроса — оконные функции вычисляются ПОСЛЕ WHERE.",
+      "expected": "По одной свежей транзакции на каждый счёт-источник."
+    },
+    {
+      "id": "SQL-19",
+      "level": "hard",
+      "schema": "banking",
+      "topic": "window functions",
+      "question": "Нарастающий итог (running total) сумм COMPLETED-переводов по счёту.",
+      "answer": "SELECT id, source_account_id, amount, created_at,\n       SUM(amount) OVER (PARTITION BY source_account_id ORDER BY created_at) AS running_total\nFROM transactions\nWHERE status = 'COMPLETED';",
+      "hint": "🟢 ТАБЛИЦА: transactions (source_account_id UUID, amount DECIMAL, created_at TIMESTAMP, status).\n\n💡 ПОДХОД — оконная функция SUM() с ORDER BY:\n• PARTITION BY source_account_id — для каждого счёта отдельно.\n• ORDER BY created_at — в хронологическом порядке.\n• SUM(amount) OVER (...) — БЕЗ ROWS BETWEEN, по умолчанию это RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW — сумма от первой строки группы до текущей.\n\nРезультат: каждая строка показывает сумму всех ПРЕДЫДУЩИХ переводов с этого счёта + текущий.\n\n⚠️ ОШИБКИ: Если не указать ORDER BY, SUM(...) OVER (...) посчитает общую сумму по всему partition (одинаковое значение для всех строк).",
+      "expected": "Кумулятивная сумма переводов: каждая строка = сумма всех предыдущих + текущий."
+    },
+    {
+      "id": "SQL-20",
+      "level": "hard",
+      "schema": "banking",
+      "topic": "CTE/divide-by-zero",
+      "question": "Доля FAILED-транзакций по дням.",
+      "answer": "WITH daily AS (\n  SELECT date_trunc('day', created_at) AS d,\n         COUNT(*) AS total,\n         COUNT(*) FILTER (WHERE status = 'FAILED') AS failed\n  FROM transactions GROUP BY 1\n)\nSELECT d, failed, total,\n       ROUND(100.0 * failed / NULLIF(total,0), 2) AS failed_pct\nFROM daily ORDER BY d;",
+      "hint": "🟢 ТАБЛИЦА: transactions (created_at TIMESTAMP, status VARCHAR).\n\n💡 ПОДХОД — CTE + защита от деления на ноль:\n1. WITH daily AS (...) — Common Table Expression, временная таблица.\n2. date_trunc('day', created_at) — обрезает время, оставляя только дату.\n3. COUNT(*) FILTER (WHERE status='FAILED') — считает только FAILED-строки (фильтр внутри агрегата).\n4. NULLIF(total, 0) — если total=0, возвращает NULL (деление на NULL даёт NULL, а не ошибку).\n5. ROUND(100.0 * failed / ..., 2) — процент с двумя знаками после запятой.\n\n⚠️ ОШИБКИ: Без NULLIF — division by zero. 100 (integer) / total — целочисленное деление (даст 0 вместо 0.33).",
+      "expected": "Процент отказов по дням, без ошибок при total=0."
+    },
+    {
+      "id": "SQL-21",
+      "level": "medium",
+      "schema": "banking",
+      "topic": "NOT EXISTS",
+      "question": "Пользователи без единого активного счёта.",
+      "answer": "SELECT u.* FROM users u\nWHERE NOT EXISTS (\n  SELECT 1 FROM accounts a\n  WHERE a.user_id = u.id AND a.status = 'ACTIVE'\n);",
+      "hint": "🟢 ТАБЛИЦЫ: users (id UUID PK, fullname, email, status), accounts (user_id FK → users.id, status — ACTIVE/BLOCKED/FROZEN).\n\n💡 ПОДХОД — NOT EXISTS:\n• Коррелированный подзапрос: для КАЖДОГО пользователя (u.id) проверяем существование ACTIVE-счёта.\n• SELECT 1 (а не *) — не читаем лишние данные, проверяем только факт существования.\n• NOT EXISTS возвращает TRUE, если подзапрос вернул 0 строк.\n\n🐞 В нашей БД: Ольга Смирнова (44444444...) — статус ACTIVE, но НИ ОДНОГО счёта — BUG-9.\n\n⚠️ Альтернатива — LEFT JOIN + IS NULL — даёт тот же результат, но NOT EXISTS часто быстрее (останавливается на первом совпадении).",
+      "expected": "Ольга Смирнова — пользователь без активного счёта."
+    },
+    {
+      "id": "SQL-22",
+      "level": "hard",
+      "schema": "ecommerce",
+      "topic": "ranking",
+      "question": "Ранжируй клиентов по сумме трат: RANK, DENSE_RANK, ROW_NUMBER.",
+      "answer": "SELECT c.name, SUM(o.sum) AS spent,\n       RANK()       OVER (ORDER BY SUM(o.sum) DESC) AS rnk,\n       DENSE_RANK() OVER (ORDER BY SUM(o.sum) DESC) AS dense_rnk,\n       ROW_NUMBER() OVER (ORDER BY SUM(o.sum) DESC) AS rn\nFROM client c JOIN \"order\" o ON o.client_id = c.id\nGROUP BY c.name;",
+      "hint": "🟢 ТАБЛИЦЫ: client (id PK, name), \"order\" (client_id FK, sum NUMERIC).\n\n💡 ПОДХОД — три оконные функции ранжирования:\n• RANK() — при одинаковых значениях даёт одинаковый ранг, СЛЕДУЮЩИЙ номер пропускается (1, 1, 3).\n• DENSE_RANK() — как RANK, но БЕЗ пропусков (1, 1, 2).\n• ROW_NUMBER() — всегда уникальный номер, даже при одинаковых значениях (1, 2, 3).\n\nВсе три используют одинаковое окно: ORDER BY SUM(o.sum) DESC — по убыванию трат.\n\n⚠️ ОШИБКИ: Если клиенты имеют одинаковую сумму, RANK покажет разницу с ROW_NUMBER. На собеседовании спросят разницу — теперь ты знаешь.",
+      "expected": "Сравнение трёх оконных функций на примере клиентов."
+    }
+  ],
+  "theory_questions": [
+    {
+      "q": "Чем отличается WHERE от HAVING?",
+      "a": "WHERE фильтрует строки до агрегации, HAVING — после GROUP BY по агрегатам."
+    },
+    {
+      "q": "Типы JOIN?",
+      "a": "INNER, LEFT, RIGHT, FULL OUTER, CROSS."
+    },
+    {
+      "q": "Почему COUNT(*) != COUNT(column)?",
+      "a": "COUNT(column) не считает строки, где column IS NULL."
+    },
+    {
+      "q": "Что такое ACID?",
+      "a": "Atomicity, Consistency, Isolation, Durability — свойства транзакций."
+    },
+    {
+      "q": "Уровни изоляции транзакций?",
+      "a": "READ UNCOMMITTED, READ COMMITTED, REPEATABLE READ, SERIALIZABLE."
+    },
+    {
+      "q": "Dirty read, non-repeatable read, phantom read?",
+      "a": "Аномалии чтения, устраняемые повышением уровня изоляции."
+    },
+    {
+      "q": "DELETE vs TRUNCATE vs DROP?",
+      "a": "DELETE — построчно с WHERE и логированием; TRUNCATE — быстро всё; DROP — удаляет таблицу."
+    },
+    {
+      "q": "Почему LIKE '%abc' не использует индекс?",
+      "a": "Лидирующий wildcard не позволяет B-tree использовать префиксный поиск."
+    },
+    {
+      "q": "Что такое идемпотентность и зачем Idempotency-Key?",
+      "a": "Повторный запрос с тем же ключом не создаёт дубликат операции."
+    }
+  ],
+  "api_test_cases": [
+    {
+      "id": "API-01",
+      "type": "positive",
+      "title": "Успешный перевод",
+      "steps": "POST /api/v1/transfers/internal с валидным телом и заголовками.",
+      "expected": "200, status=success, transaction_id != null, баланс source -amount, destination +amount, запись transactions COMPLETED, событие в outbox_events."
+    },
+    {
+      "id": "API-02",
+      "type": "idempotency",
+      "title": "Повтор с тем же Idempotency-Key",
+      "steps": "Два одинаковых запроса с одним Idempotency-Key.",
+      "expected": "Второй НЕ создаёт новую транзакцию, возвращает тот же transaction_id; COUNT в БД = 1."
+    },
+    {
+      "id": "API-03",
+      "type": "negative",
+      "title": "Недостаточно средств",
+      "steps": "amount > balance.",
+      "expected": "4xx, status != success, баланс не меняется."
+    },
+    {
+      "id": "API-04",
+      "type": "negative",
+      "title": "Заблокированный счёт",
+      "steps": "source в BLOCKED/FROZEN.",
+      "expected": "4xx, перевод отклонён."
+    },
+    {
+      "id": "API-05",
+      "type": "negative",
+      "title": "Нулевая/отрицательная сумма",
+      "steps": "amount=0 или -100.",
+      "expected": "400 валидация."
+    },
+    {
+      "id": "API-06",
+      "type": "negative",
+      "title": "Несовпадение валют",
+      "steps": "currency != currency счёта.",
+      "expected": "4xx."
+    },
+    {
+      "id": "API-07",
+      "type": "negative",
+      "title": "Нет токена",
+      "steps": "Без Authorization.",
+      "expected": "401."
+    },
+    {
+      "id": "API-08",
+      "type": "negative",
+      "title": "Чужой счёт как source",
+      "steps": "source принадлежит другому юзеру.",
+      "expected": "403."
+    },
+    {
+      "id": "API-09",
+      "type": "bug",
+      "title": "Баг округления",
+      "steps": "amount=1500.50 в запросе.",
+      "expected": "В ответе data.amount=1500.00 — ДЕФЕКТ. Сравнивать через BigDecimal."
+    }
+  ]
+}

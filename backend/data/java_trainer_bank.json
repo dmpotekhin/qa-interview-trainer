@@ -1,0 +1,101 @@
+{
+  "meta": {
+    "title": "Java Live-Coding & Autotest Trainer",
+    "language": "Java 17",
+    "stack": "RestAssured + JUnit5 + Allure + Selenide"
+  },
+  "livecoding_tasks": [
+    {
+      "id": "JLC-01",
+      "level": "easy",
+      "topic": "strings",
+      "task": "Проверь, является ли строка палиндромом (без учёта регистра и пробелов).",
+      "signature": "boolean isPalindrome(String s)",
+      "solution": "boolean isPalindrome(String s){\n  String c = s.toLowerCase().replaceAll(\"[^a-z0-9]\",\"\");\n  return c.equals(new StringBuilder(c).reverse().toString());\n}",
+      "tests": "isPalindrome(\"A man a plan a canal Panama\") == true"
+    },
+    {
+      "id": "JLC-02",
+      "level": "easy",
+      "topic": "collections",
+      "task": "Найди первый неповторяющийся символ в строке.",
+      "signature": "Character firstUnique(String s)",
+      "solution": "Character firstUnique(String s){\n  Map<Character,Long> m = s.chars().mapToObj(c->(char)c)\n     .collect(Collectors.groupingBy(c->c, LinkedHashMap::new, Collectors.counting()));\n  return m.entrySet().stream().filter(e->e.getValue()==1)\n     .map(Map.Entry::getKey).findFirst().orElse(null);\n}",
+      "tests": "firstUnique(\"swiss\") == 'w'"
+    },
+    {
+      "id": "JLC-03",
+      "level": "medium",
+      "topic": "streams",
+      "task": "Дан List<Integer>. Верни сумму квадратов чётных чисел.",
+      "signature": "int sumSquaresOfEven(List<Integer> nums)",
+      "solution": "int sumSquaresOfEven(List<Integer> nums){\n  return nums.stream().filter(n->n%2==0).mapToInt(n->n*n).sum();\n}",
+      "tests": "sumSquaresOfEven(List.of(1,2,3,4)) == 20"
+    },
+    {
+      "id": "JLC-04",
+      "level": "medium",
+      "topic": "streams/grouping",
+      "task": "Дан список слов. Сгруппируй их по длине (Map<Integer,List<String>>).",
+      "signature": "Map<Integer,List<String>> groupByLength(List<String> words)",
+      "solution": "Map<Integer,List<String>> groupByLength(List<String> w){\n  return w.stream().collect(Collectors.groupingBy(String::length));\n}",
+      "tests": "groupByLength(List.of(\"a\",\"bb\",\"cc\")).get(2).size() == 2"
+    },
+    {
+      "id": "JLC-05",
+      "level": "medium",
+      "topic": "algorithms",
+      "task": "Проверь, что две строки — анаграммы.",
+      "signature": "boolean isAnagram(String a, String b)",
+      "solution": "boolean isAnagram(String a,String b){\n  char[] x=a.toCharArray(), y=b.toCharArray();\n  Arrays.sort(x); Arrays.sort(y);\n  return Arrays.equals(x,y);\n}",
+      "tests": "isAnagram(\"listen\",\"silent\") == true"
+    },
+    {
+      "id": "JLC-06",
+      "level": "medium",
+      "topic": "maps",
+      "task": "Посчитай частоту слов в строке и верни самое частое слово.",
+      "signature": "String mostFrequentWord(String text)",
+      "solution": "String mostFrequentWord(String text){\n  return Arrays.stream(text.toLowerCase().split(\"\\\\W+\"))\n     .collect(Collectors.groupingBy(s->s, Collectors.counting()))\n     .entrySet().stream().max(Map.Entry.comparingByValue())\n     .map(Map.Entry::getKey).orElse(null);\n}",
+      "tests": "mostFrequentWord(\"a b a c a\") == \"a\""
+    },
+    {
+      "id": "JLC-07",
+      "level": "hard",
+      "topic": "algorithms",
+      "task": "Two Sum: верни индексы двух чисел, дающих target.",
+      "signature": "int[] twoSum(int[] nums, int target)",
+      "solution": "int[] twoSum(int[] nums,int target){\n  Map<Integer,Integer> seen=new HashMap<>();\n  for(int i=0;i<nums.length;i++){\n    int need=target-nums[i];\n    if(seen.containsKey(need)) return new int[]{seen.get(need),i};\n    seen.put(nums[i],i);\n  }\n  return new int[]{};\n}",
+      "tests": "twoSum([2,7,11,15],9) == [0,1]"
+    },
+    {
+      "id": "JLC-08",
+      "level": "hard",
+      "topic": "design/QA",
+      "task": "Реализуй потокобезопасный счётчик идемпотентных ключей (повтор ключа не увеличивает счётчик).",
+      "signature": "class IdempotencyTracker { boolean register(String key) }",
+      "solution": "class IdempotencyTracker{\n  private final Set<String> seen = ConcurrentHashMap.newKeySet();\n  boolean register(String key){ return seen.add(key); } // true = новый\n}",
+      "tests": "register(\"k\")==true; register(\"k\")==false"
+    }
+  ],
+  "autotest_project": {
+    "description": "Готовые файлы для модуля автотестов REST + UI.",
+    "pom_dependencies": [
+      "io.rest-assured:rest-assured:5.4.0",
+      "org.junit.jupiter:junit-jupiter:5.10.2",
+      "io.qameta.allure:allure-rest-assured:2.27.0",
+      "io.qameta.allure:allure-junit5:2.27.0",
+      "com.codeborne:selenide:7.4.3",
+      "org.postgresql:postgresql:42.7.3",
+      "org.assertj:assertj-core:3.25.3"
+    ],
+    "files": {
+      "BaseTest.java": "package config;\nimport io.qameta.allure.restassured.AllureRestAssured;\nimport io.restassured.RestAssured;\nimport org.junit.jupiter.api.BeforeAll;\n\npublic abstract class BaseTest {\n  @BeforeAll\n  static void setup() {\n    RestAssured.baseURI = System.getProperty(\"baseUri\",\"http://localhost:8080\");\n    RestAssured.filters(new AllureRestAssured());\n  }\n}",
+      "DbClient.java": "package db;\nimport java.math.BigDecimal;\nimport java.sql.*;\n\npublic class DbClient {\n  private static final String URL=\"jdbc:postgresql://localhost:5432/postgres\";\n  public static BigDecimal getBalance(String id) throws SQLException {\n    try(Connection c=DriverManager.getConnection(URL,\"postgres\",\"postgres\");\n        PreparedStatement ps=c.prepareStatement(\"SELECT balance FROM accounts WHERE id=?::uuid\")){\n      ps.setString(1,id); ResultSet rs=ps.executeQuery(); rs.next();\n      return rs.getBigDecimal(\"balance\");\n    }\n  }\n  public static int countTxByKey(String key) throws SQLException {\n    try(Connection c=DriverManager.getConnection(URL,\"postgres\",\"postgres\");\n        PreparedStatement ps=c.prepareStatement(\"SELECT COUNT(*) FROM transactions WHERE idempotency_key=?\")){\n      ps.setString(1,key); ResultSet rs=ps.executeQuery(); rs.next();\n      return rs.getInt(1);\n    }\n  }\n}",
+      "TransferPositiveTest.java": "package tests;\nimport config.BaseTest; import db.DbClient;\nimport org.junit.jupiter.api.Test;\nimport java.math.BigDecimal; import java.util.UUID;\nimport static io.restassured.RestAssured.given;\nimport static org.hamcrest.Matchers.*;\nimport static org.assertj.core.api.Assertions.assertThat;\n\nclass TransferPositiveTest extends BaseTest {\n  @Test\n  void successfulTransfer() throws Exception {\n    String src=\"83740e53-609c-4822-9213-4f9e61f22401\";\n    String dst=\"11259624-5f5c-4830-9973-77405085440a\";\n    BigDecimal before=DbClient.getBalance(src);\n    String body=\"\"\"\n      {\\\"source_account_id\\\":\\\"%s\\\",\\\"destination_account_id\\\":\\\"%s\\\",\n       \\\"amount\\\":1500.50,\\\"currency\\\":\\\"USD\\\",\\\"description\\\":\\\"rent\\\",\\\"save_as_template\\\":true}\n      \"\"\".formatted(src,dst);\n    given().header(\"Idempotency-Key\",UUID.randomUUID().toString())\n           .header(\"Authorization\",\"Bearer valid-token\")\n           .contentType(\"application/json\").body(body)\n    .when().post(\"/api/v1/transfers/internal\")\n    .then().statusCode(200)\n           .body(\"status\",equalTo(\"success\"))\n           .body(\"transaction_id\",notNullValue());\n    assertThat(DbClient.getBalance(src))\n        .isEqualByComparingTo(before.subtract(new BigDecimal(\"1500.50\")));\n  }\n}",
+      "IdempotencyTest.java": "package tests;\nimport config.BaseTest; import db.DbClient;\nimport org.junit.jupiter.api.Test; import io.restassured.response.Response;\nimport java.util.UUID;\nimport static io.restassured.RestAssured.given;\nimport static org.assertj.core.api.Assertions.assertThat;\n\nclass IdempotencyTest extends BaseTest {\n  Response send(String key){\n    return given().header(\"Idempotency-Key\",key)\n      .header(\"Authorization\",\"Bearer valid-token\")\n      .contentType(\"application/json\")\n      .body(\"{\\\"source_account_id\\\":\\\"83740e53-609c-4822-9213-4f9e61f22401\\\",\\\"destination_account_id\\\":\\\"11259624-5f5c-4830-9973-77405085440a\\\",\\\"amount\\\":10,\\\"currency\\\":\\\"USD\\\"}\")\n      .post(\"/api/v1/transfers/internal\");\n  }\n  @Test void sameKeyOneTransaction() throws Exception {\n    String key=UUID.randomUUID().toString();\n    Response a=send(key), b=send(key);\n    assertThat(b.jsonPath().getString(\"transaction_id\"))\n        .isEqualTo(a.jsonPath().getString(\"transaction_id\"));\n    assertThat(DbClient.countTxByKey(key)).isEqualTo(1);\n  }\n}",
+      "TransferNegativeTest.java": "package tests;\nimport config.BaseTest;\nimport org.junit.jupiter.params.ParameterizedTest;\nimport org.junit.jupiter.params.provider.CsvSource;\nimport java.util.UUID;\nimport static io.restassured.RestAssured.given;\n\nclass TransferNegativeTest extends BaseTest {\n  @ParameterizedTest\n  @CsvSource({\"0,400\",\"-100,400\",\"99999999,400\"})\n  void invalidAmount(String amount,int status){\n    given().header(\"Idempotency-Key\",UUID.randomUUID().toString())\n      .header(\"Authorization\",\"Bearer valid-token\")\n      .contentType(\"application/json\")\n      .body(\"{\\\"source_account_id\\\":\\\"83740e53-609c-4822-9213-4f9e61f22401\\\",\\\"destination_account_id\\\":\\\"11259624-5f5c-4830-9973-77405085440a\\\",\\\"amount\\\":\"+amount+\",\\\"currency\\\":\\\"USD\\\"}\")\n    .when().post(\"/api/v1/transfers/internal\")\n    .then().statusCode(status);\n  }\n}",
+      "TrainerUiTest.java": "package tests;\nimport org.junit.jupiter.api.Test;\nimport static com.codeborne.selenide.Selenide.*;\nimport static com.codeborne.selenide.Condition.*;\n\nclass TrainerUiTest {\n  @Test void solveSqlQuestionInUi(){\n    open(\"http://localhost:3000\");\n    $(\"#question-card\").shouldBe(visible);\n    $(\"#sql-editor\").setValue(\"SELECT c.id,c.email,c.name FROM client c LEFT JOIN \\\"order\\\" o ON o.client_id=c.id WHERE o.id IS NULL;\");\n    $(\"#run-btn\").click();\n    $(\"#result-status\").shouldHave(text(\"Correct\"));\n  }\n}"
+    }
+  }
+}
